@@ -1,0 +1,124 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Steal a Brainrot — Brainrots & Earnings</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--mut:#111827;--accent:#f59e0b;color-scheme:dark}
+    body{font-family:Inter, system-ui, Arial, sans-serif;background:linear-gradient(180deg,#071026 0%,#02111a 100%);color:#e6eef6;margin:0;padding:28px}
+    .container{max-width:980px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+    h1{font-size:22px;margin:0}
+    p.lead{margin:6px 0 18px;opacity:.9}
+    .card{background:rgba(255,255,255,0.02);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,.6);}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px 8px;text-align:left;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    th{font-weight:600;opacity:.9}
+    .mutations{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .mut{padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer}
+    .mut.active{outline:2px solid rgba(245,158,11,.15)}
+    .small{font-size:12px;opacity:.8}
+    .note{margin-top:12px;font-size:13px;opacity:.85}
+    footer{margin-top:18px;font-size:13px;opacity:.8}
+    @media (max-width:640px){th,td{font-size:13px;padding:8px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z" fill="#f59e0b" opacity=".12"></path><path d="M12 6l3 4-3 2-3-2 3-4z" fill="#f59e0b"></path></svg>
+      <div>
+        <h1>Steal a Brainrot — Brainrots & Earnings</h1>
+        <p class="lead">A simple page that lists some Brainrots, their base money / second, and shows how mutations change earnings.</p>
+      </div>
+    </header><div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <strong>Mutations (click to toggle):</strong>
+    <div class="mutations" id="mutations"></div>
+  </div>
+
+  <table aria-describedby="brainrot-table">
+    <thead>
+      <tr><th>Brainrot</th><th>Rarity</th><th>Buy Price</th><th>Base $/s</th><th id="mutHeader">Mutated $/s</th></tr>
+    </thead>
+    <tbody id="brainrot-table">
+      <!-- rows inserted by JS -->
+    </tbody>
+  </table>
+
+  <p class="note">Numbers shown are examples taken from community resources (base $/s) and mutation multipliers. See sources below. Use the mutation buttons to preview earnings with different mutation multipliers.</p>
+
+  <footer>
+    <div class="small">Sources used to build this table: community guides and the Steal a Brainrot wiki.</div>
+  </footer>
+</div>
+
+  </div>  <script>
+    // Sample data (base money per second and buy price) — taken from community guides.
+    const brainrots = [
+      {name:'Noobini Pizzanini', rarity:'Common', price:25, base:1},
+      {name:'Tim Cheese', rarity:'Common', price:500, base:5},
+      {name:'Penguino Cocosino', rarity:'Epic', price:45000, base:300},
+      {name:'Sigma boy', rarity:'Legendary', price:340000, base:1800},
+      {name:'Strawberry Elephant', rarity:'OG', price:500000000000, base:250000000}
+    ];
+
+    // Mutation multipliers (from community wiki)
+    const mutations = [
+      {id:'default', label:'Default (x1)', mult:1},
+      {id:'gold', label:'Gold (x1.25)', mult:1.25},
+      {id:'diamond', label:'Diamond (x1.5)', mult:1.5},
+      {id:'yinyang', label:'Yin-Yang (x7.5)', mult:7.5},
+      {id:'radioactive', label:'Radioactive (x8.5)', mult:8.5},
+      {id:'rainbow', label:'Rainbow (x10)', mult:10}
+    ];
+
+    let activeMutation = mutations[0];
+
+    const mutContainer = document.getElementById('mutations');
+    const tableBody = document.getElementById('brainrot-table');
+    const mutHeader = document.getElementById('mutHeader');
+
+    function fmt(n){
+      if (!isFinite(n)) return n;
+      if (n>=1e12) return (n/1e12).toFixed(2)+'T';
+      if (n>=1e9) return (n/1e9).toFixed(2)+'B';
+      if (n>=1e6) return (n/1e6).toFixed(2)+'M';
+      if (n>=1000) return (n/1000).toFixed(2)+'k';
+      return n.toString();
+    }
+
+    function renderMutations(){
+      mutContainer.innerHTML='';
+      mutations.forEach(m=>{
+        const btn = document.createElement('button');
+        btn.className='mut'+(m.id===activeMutation.id? ' active':'');
+        btn.textContent = m.label;
+        btn.onclick = ()=>{ activeMutation = m; renderTable(); renderMutations(); };
+        mutContainer.appendChild(btn);
+      });
+    }
+
+    function renderTable(){
+      tableBody.innerHTML='';
+      brainrots.forEach(b=>{
+        const tr = document.createElement('tr');
+        const mutated = Math.floor(b.base * activeMutation.mult);
+        tr.innerHTML = `
+          <td><strong>${b.name}</strong></td>
+          <td>${b.rarity}</td>
+          <td>$${fmt(b.price)}</td>
+          <td>$${fmt(b.base)}/s</td>
+          <td>$${fmt(mutated)}/s</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+      mutHeader.textContent = `Mutated $/s — ${activeMutation.label}`;
+    }
+
+    renderMutations();
+    renderTable();
+  </script></body>
+</html>
